@@ -1,0 +1,24 @@
+fastapi
+uvicorn[standard]
+
+# Database
+SQLAlchemy
+psycopg2-binary
+
+# Migrations
+alembic
+
+# Validation & Settings (Pydantic v2)
+pydantic
+pydantic-settings
+pydantic[email]
+
+# Auth & Security
+python-jose
+passlib[argon2]
+
+# Environment variables
+python-dotenv
+
+# Optional (Swagger form support)
+python-multipart

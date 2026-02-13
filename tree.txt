@@ -1,0 +1,75 @@
+﻿|-- alembic
+    |-- versions
+        |-- 386071713d29_init.py
+    |-- env.py
+    |-- README
+    |-- script.py.mako
+|-- app
+    |-- audit
+        |-- models.py
+        |-- router.py
+        |-- service.py
+        |-- __init__.py
+    |-- auth
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- categories
+        |-- models.py
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- common
+        |-- enums.py
+    |-- core
+        |-- config.py
+        |-- database.py
+        |-- dependencies.py
+        |-- exceptions.py
+        |-- security.py
+        |-- __init__.py
+    |-- db
+        |-- base.py
+    |-- inventory
+        |-- models.py
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- products
+        |-- models.py
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- reports
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- suppliers
+        |-- models.py
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- users
+        |-- models.py
+        |-- router.py
+        |-- schemas.py
+        |-- service.py
+        |-- __init__.py
+    |-- main.py
+    |-- __init__.py
+|-- .env
+|-- .gitignore
+|-- alembic.ini
+|-- docker-compose.yml
+|-- Dockerfile
+|-- LICENSE
+|-- README.md
+|-- requirements.txt
+|-- tree.txt
+|-- tree_gen.bat
