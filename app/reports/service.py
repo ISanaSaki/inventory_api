@@ -95,10 +95,11 @@ def inventory_range_report(db: Session, start_date, end_date):
         for key, value in data.items()
     ]
 
+
 def top_products_report(db: Session, change_type: str):
-    return (
+    results = (
         db.query(
-            Product.name,
+            Product.name.label("product_name"),
             func.sum(Inventory.quantity).label("total_quantity")
         )
         .join(Inventory, Inventory.product_id == Product.id)
@@ -108,3 +109,11 @@ def top_products_report(db: Session, change_type: str):
         .limit(5)
         .all()
     )
+
+    return [
+        {
+            "product_name": r.product_name,
+            "total_quantity": float(r.total_quantity),
+        }
+        for r in results
+    ]
