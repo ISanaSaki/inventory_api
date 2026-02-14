@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Float, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Float, DateTime,Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -14,5 +14,5 @@ class Product(Base):
     unit = Column(String(20), nullable=False)  
     min_quantity = Column(Float, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    is_deleted = Column(Boolean, default=False)
     category = relationship("Category", backref="products")

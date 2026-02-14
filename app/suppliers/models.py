@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text,Boolean
 from app.core.database import Base
 
 class Supplier(Base):
@@ -8,3 +8,4 @@ class Supplier(Base):
     name = Column(String(100), nullable=False)
     contact = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
+    is_deleted = Column(Boolean, default=False)
