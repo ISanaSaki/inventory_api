@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from fastapi.security import OAuth2PasswordBearer
+from app.common.enums import Role
 from app.users.models import User
 from app.core.database import get_db
 from app.core.security import (
@@ -9,10 +10,9 @@ from app.core.security import (
     create_access_token,
     decode_access_token,
 )
-from app.core.config import settings
-from fastapi.security import OAuth2PasswordBearer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 
 def authenticate_user(db: Session, email: str, password: str) -> User | None:
     user = db.query(User).filter(User.email == email).first()
@@ -29,8 +29,12 @@ def create_user(
     db: Session,
     email: str,
     password: str,
-    role,
+    role: Role,
 ) -> User:
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
     user = User(
         email=email,
         hashed_password=hash_password(password),
