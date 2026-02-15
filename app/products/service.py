@@ -1,8 +1,10 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from fastapi import HTTPException
 from app.products.models import Product
 from app.products.schemas import ProductCreate
 from app.inventory.models import Inventory
+from app.core.query_utils import apply_pagination,apply_sorting
 
 def create_product(db: Session, data: ProductCreate):
     existing = db.query(Product).filter(
@@ -19,7 +21,17 @@ def create_product(db: Session, data: ProductCreate):
     db.refresh(product)
     return product
 
-def get_products(db: Session, category_id: int = None, name: str = None):
+def get_products(
+    db: Session,
+    page: int,
+    page_size: int,
+    offset: int,
+    sort_by: str | None,
+    sort_order: str,
+    category_id: int | None = None,
+    name: str | None = None,
+    search: str | None = None,
+):
     query = db.query(Product).filter(Product.is_deleted == False)
 
     if category_id:
@@ -28,7 +40,25 @@ def get_products(db: Session, category_id: int = None, name: str = None):
     if name:
         query = query.filter(Product.name.ilike(f"%{name}%"))
 
-    return query.all()
+    if search:
+        query = query.filter(
+            Product.name.ilike(f"%{search}%")
+        )
+
+    total = query.count()
+
+    query = apply_sorting(query, Product, sort_by, sort_order)
+
+    query = apply_pagination(query, offset, page_size)
+
+    items = query.all()
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "items": items,
+    }
 
 def get_product(db: Session, product_id: int):
     return db.query(Product).filter(

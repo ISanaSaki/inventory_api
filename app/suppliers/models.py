@@ -9,3 +9,4 @@ class Supplier(Base):
     contact = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
     is_deleted = Column(Boolean, default=False)
+    description = Column(String)

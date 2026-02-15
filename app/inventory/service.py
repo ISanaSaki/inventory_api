@@ -5,6 +5,7 @@ from app.inventory.schemas import InventoryCreate
 from app.users.models import User
 from app.audit.service import log_action
 from app.common.enums import ChangeType
+from app.core.query_utils import apply_pagination,apply_sorting
 
 def get_current_stock(db: Session, product_id: int):
     result = db.query(
@@ -60,10 +61,39 @@ def create_inventory_log(
     return log
 
 
-def get_inventory_logs(db: Session, product_id: int = None, change_type: str = None):
+def get_inventory_logs(
+    db: Session,
+    page: int,
+    page_size: int,
+    offset: int,
+    sort_by: str | None,
+    sort_order: str,
+    product_id: int | None = None,
+    change_type: str | None = None,
+):
     query = db.query(Inventory)
+
     if product_id is not None:
         query = query.filter(Inventory.product_id == product_id)
+
     if change_type is not None:
         query = query.filter(Inventory.change_type == change_type)
-    return query.order_by(Inventory.created_at.desc()).all()
+
+    total = query.count()
+
+    if not sort_by:
+        sort_by = "created_at"
+        sort_order = "desc"
+
+    query = apply_sorting(query, Inventory, sort_by, sort_order)
+
+    query = apply_pagination(query, offset, page_size)
+
+    items = query.all()
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "items": items,
+    }

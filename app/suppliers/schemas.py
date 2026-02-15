@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,List
 
 class SupplierCreate(BaseModel):
     name: str
@@ -14,3 +14,9 @@ class SupplierOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class SupplierList(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: List[SupplierOut]

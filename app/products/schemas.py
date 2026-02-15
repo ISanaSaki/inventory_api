@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,List
 
 class ProductCreate(BaseModel):
     name: str
@@ -20,3 +20,9 @@ class ProductOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ProductList(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: List[ProductOut]

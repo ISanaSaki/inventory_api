@@ -3,6 +3,8 @@ from fastapi import HTTPException
 from app.categories.models import Category
 from app.categories.schemas import CategoryCreate
 from app.products.models import Product
+from sqlalchemy import or_
+from app.core.query_utils import apply_pagination,apply_sorting
 
 def create_category(db: Session, data: CategoryCreate):
     existing = db.query(Category).filter(
@@ -23,10 +25,39 @@ def create_category(db: Session, data: CategoryCreate):
     db.refresh(category)
     return category
 
-def get_categories(db: Session):
-    return db.query(Category).filter(
-        Category.is_deleted==False
-    ).all()
+def get_categories(
+    db: Session,
+    page: int,
+    page_size: int,
+    offset: int,
+    sort_by: str | None,
+    sort_order: str,
+    search: str | None = None,
+):
+    query = db.query(Category).filter(Category.is_deleted == False)
+
+    if search:
+        query = query.filter(
+            or_(
+                Category.name.ilike(f"%{search}%"),
+                Category.description.ilike(f"%{search}%"),
+            )
+        )
+
+    total = query.count()
+
+    query = apply_sorting(query, Category, sort_by, sort_order)
+
+    query = apply_pagination(query, offset, page_size)
+
+    items = query.all()
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "items": items,
+    }
 
 def get_category(db: Session, category_id: int):
     return db.query(Category).filter(

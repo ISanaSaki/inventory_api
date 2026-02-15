@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
-from app.categories.schemas import CategoryCreate, CategoryOut
+from app.categories.schemas import CategoryCreate, CategoryOut,CategoryList
 from app.categories.service import create_category, get_categories, get_category, update_category, delete_category
 from app.core.database import get_db
-from app.core.dependencies import require_role
+from app.core.dependencies import require_role,pagination_params,sorting_params
 from app.common.enums import Role
 
 router = APIRouter(
@@ -21,9 +21,22 @@ def create_cat(category: CategoryCreate, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/", response_model=list[CategoryOut])
-def list_categories(db: Session = Depends(get_db)):
-    return get_categories(db)
+@router.get("/", response_model=CategoryList)
+def list_categories(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+    sorting: dict = Depends(sorting_params),
+    search: str | None = Query(None),
+):
+    return get_categories(
+        db=db,
+        page=pagination["page"],
+        page_size=pagination["page_size"],
+        offset=pagination["offset"],
+        sort_by=sorting["sort_by"],
+        sort_order=sorting["sort_order"],
+        search=search,
+    )
 
 @router.get("/{category_id}", response_model=CategoryOut)
 def retrieve_category(category_id: int, db: Session = Depends(get_db)):

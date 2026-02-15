@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,List
 
 class CategoryCreate(BaseModel):
     name: str
@@ -12,3 +12,9 @@ class CategoryOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CategoryList(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: List[CategoryOut]

@@ -10,7 +10,7 @@ class Inventory(Base):
 
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    change_type = Column(Enum(ChangeType),nullable=False) 
+    change_type = Column(Enum(ChangeType, name="changetype"), nullable=False)
     quantity = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=True)

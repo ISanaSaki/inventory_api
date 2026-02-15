@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.suppliers.schemas import SupplierCreate, SupplierOut
+from app.suppliers.schemas import SupplierCreate, SupplierOut,SupplierList
 from app.suppliers.service import create_supplier, get_suppliers, get_supplier, update_supplier, delete_supplier
-from app.core.dependencies import require_role
+from app.core.dependencies import require_role,pagination_params,sorting_params
 from app.common.enums import Role
 
 router = APIRouter(
@@ -18,9 +18,22 @@ router = APIRouter(
 def add_supplier(data: SupplierCreate, db: Session = Depends(get_db)):
     return create_supplier(db, data)
 
-@router.get("/", response_model=list[SupplierOut])
-def list_suppliers(db: Session = Depends(get_db)):
-    return get_suppliers(db)
+@router.get("/", response_model=SupplierList)
+def list_suppliers(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+    sorting: dict = Depends(sorting_params),
+    search: str | None = Query(None),
+):
+    return get_suppliers(
+        db=db,
+        page=pagination["page"],
+        page_size=pagination["page_size"],
+        offset=pagination["offset"],
+        sort_by=sorting["sort_by"],
+        sort_order=sorting["sort_order"],
+        search=search,
+    )
 
 @router.get("/{supplier_id}", response_model=SupplierOut)
 def retrieve_supplier(supplier_id: int, db: Session = Depends(get_db)):
