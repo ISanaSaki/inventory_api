@@ -16,3 +16,4 @@ class Product(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_deleted = Column(Boolean, default=False)
     category = relationship("Category", backref="products")
+    price = Column(Float, nullable=False)

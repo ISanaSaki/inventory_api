@@ -5,8 +5,11 @@ from app.products.models import Product
 from app.products.schemas import ProductCreate
 from app.inventory.models import Inventory
 from app.core.query_utils import apply_pagination,apply_sorting
+from app.users.models import User
+from app.audit.service import log_action
 
-def create_product(db: Session, data: ProductCreate):
+
+def create_product(db: Session, data: ProductCreate, current_user: User):
     existing = db.query(Product).filter(
         Product.sku == data.sku,
         Product.is_deleted == False
@@ -19,6 +22,16 @@ def create_product(db: Session, data: ProductCreate):
     db.add(product)
     db.commit()
     db.refresh(product)
+
+    log_action(
+    db=db,
+    user_id=current_user.id,
+    action="CREATE",
+    entity="product",
+    entity_id=product.id,
+    new_data=data.dict()
+)
+
     return product
 
 def get_products(
@@ -66,7 +79,13 @@ def get_product(db: Session, product_id: int):
         Product.is_deleted == False
     ).first()
 
-def update_product(db: Session, product_id: int, data: ProductCreate):
+def update_product(
+    db: Session,
+    product_id: int,
+    data: ProductCreate,
+    current_user: User
+):
+
     product = get_product(db, product_id)
 
     if not product:
@@ -84,11 +103,33 @@ def update_product(db: Session, product_id: int, data: ProductCreate):
     for key, value in data.dict().items():
         setattr(product, key, value)
 
+    old_data = {
+    "name": product.name,
+    "sku": product.sku,
+    "price": product.price,
+}
+
     db.commit()
+
+    log_action(
+    db=db,
+    user_id=current_user.id,
+    action="UPDATE",
+    entity="product",
+    entity_id=product.id,
+    old_data=old_data,
+    new_data=data.dict()
+)
+
     db.refresh(product)
     return product
 
-def delete_product(db: Session, product_id: int):
+def delete_product(
+    db: Session,
+    product_id: int,
+    current_user: User
+):
+
     product = get_product(db, product_id)
 
     if not product:
@@ -107,5 +148,15 @@ def delete_product(db: Session, product_id: int):
     product.is_deleted = True
     db.commit()
     db.refresh(product)
+    
+    log_action(
+    db=db,
+    user_id=current_user.id,
+    action="DELETE",
+    entity="product",
+    entity_id=product.id,
+    old_data={"is_deleted": False},
+    new_data={"is_deleted": True}
+)
 
     return product
