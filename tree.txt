@@ -1,6 +1,9 @@
 ﻿|-- alembic
     |-- versions
+        |-- 1cd27883de6e_init_suppliers_table.py
         |-- 386071713d29_init.py
+        |-- 9fb7804e31a5_init_soft_delete.py
+        |-- c765d0204833_.py
     |-- env.py
     |-- README
     |-- script.py.mako
@@ -28,6 +31,7 @@
         |-- database.py
         |-- dependencies.py
         |-- exceptions.py
+        |-- query_utils.py
         |-- security.py
         |-- __init__.py
     |-- db
