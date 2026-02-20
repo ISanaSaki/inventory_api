@@ -7,7 +7,7 @@ from app.inventory.models import Inventory
 from app.core.query_utils import apply_pagination,apply_sorting
 from app.users.models import User
 from app.audit.service import log_action
-
+from fastapi.encoders import jsonable_encoder
 
 def create_product(db: Session, data: ProductCreate, current_user: User):
     existing = db.query(Product).filter(
@@ -29,7 +29,7 @@ def create_product(db: Session, data: ProductCreate, current_user: User):
     action="CREATE",
     entity="product",
     entity_id=product.id,
-    new_data=data.dict()
+    new_data=jsonable_encoder(data.dict())
 )
 
     return product
@@ -103,22 +103,25 @@ def update_product(
     for key, value in data.dict().items():
         setattr(product, key, value)
 
-    old_data = {
-    "name": product.name,
-    "sku": product.sku,
-    "price": product.price,
-}
+    old_data = jsonable_encoder({
+        "name": product.name,
+        "sku": product.sku,
+        "price": product.price,
+})
+
+    for key, value in data.dict().items():
+        setattr(product, key, value)
 
     db.commit()
 
     log_action(
-    db=db,
-    user_id=current_user.id,
-    action="UPDATE",
-    entity="product",
-    entity_id=product.id,
-    old_data=old_data,
-    new_data=data.dict()
+        db=db,
+        user_id=current_user.id,
+        action="UPDATE",
+        entity="product",
+        entity_id=product.id,
+        old_data=old_data,
+        new_data=jsonable_encoder(data.dict()),
 )
 
     db.refresh(product)

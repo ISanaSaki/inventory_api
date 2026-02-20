@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from typing import Optional,List
+from decimal import Decimal
 
 class ProductCreate(BaseModel):
     name: str
@@ -8,6 +9,7 @@ class ProductCreate(BaseModel):
     description: Optional[str] = None
     unit: str
     min_quantity: float = 0
+    price: Decimal = Field(..., gt=0)
 
 class ProductOut(BaseModel):
     id: int
@@ -17,6 +19,7 @@ class ProductOut(BaseModel):
     description: Optional[str]
     unit: str
     min_quantity: float
+    price: Decimal 
 
     class Config:
         from_attributes = True
