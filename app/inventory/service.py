@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 from app.inventory.models import Inventory
 from app.products.models import Product
 from app.inventory.schemas import InventoryCreate
@@ -60,40 +61,72 @@ def create_inventory_log(
 
     return log
 
-
 def get_inventory_logs(
-    db: Session,
-    page: int,
-    page_size: int,
-    offset: int,
-    sort_by: str | None,
-    sort_order: str,
-    product_id: int | None = None,
-    change_type: str | None = None,
+    db,
+    change_type=None,
+    product_id=None,
+    user_id=None,
+    supplier_id=None,
+    start_date=None,
+    end_date=None,
+
+    # pagination
+    page: int = 1,
+    page_size: int = 20,
+    offset: int | None = None,
+
+    # sorting
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
 ):
-    query = db.query(Inventory)
+    q = db.query(Inventory)
+    # change_type: Enum or str
+    if change_type:
+        if isinstance(change_type, ChangeType):
+            change_type = change_type.value  # "IN" or "OUT"
 
-    if product_id is not None:
-        query = query.filter(Inventory.product_id == product_id)
+        if change_type not in ("IN", "OUT"):
+            raise HTTPException(status_code=400, detail="Invalid change_type")
 
-    if change_type is not None:
-        query = query.filter(Inventory.change_type == change_type)
+        q = q.filter(Inventory.change_type == change_type)
 
-    total = query.count()
+    if product_id:
+        q = q.filter(Inventory.product_id == product_id)
 
-    if not sort_by:
-        sort_by = "created_at"
-        sort_order = "desc"
+    if user_id:
+        q = q.filter(Inventory.user_id == user_id)
 
-    query = apply_sorting(query, Inventory, sort_by, sort_order)
+    if supplier_id:
+        q = q.filter(Inventory.supplier_id == supplier_id)
 
-    query = apply_pagination(query, offset, page_size)
+    if start_date:
+        q = q.filter(Inventory.created_at >= start_date)
 
-    items = query.all()
+    if end_date:
+        q = q.filter(Inventory.created_at <= end_date)
+
+    total = q.count()
+
+    #  sorting 
+    allowed_sort_fields = {"created_at", "quantity", "id", "product_id", "user_id"}
+    if sort_by not in allowed_sort_fields:
+        raise HTTPException(status_code=400, detail="Invalid sort_by")
+
+    sort_col = getattr(Inventory, sort_by)
+    if sort_order == "asc":
+        q = q.order_by(sort_col.asc())
+    else:
+        q = q.order_by(sort_col.desc())
+
+    # pagination
+    if offset is None:
+        offset = (page - 1) * page_size
+
+    items = q.offset(offset).limit(page_size).all()
 
     return {
         "total": total,
         "page": page,
         "page_size": page_size,
-        "items": items,
+        "items": items
     }

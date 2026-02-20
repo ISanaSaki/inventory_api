@@ -29,3 +29,13 @@ class ProductList(BaseModel):
     page: int
     page_size: int
     items: List[ProductOut]
+
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    category_id: Optional[int] = None
+    sku: Optional[str] = None
+    description: Optional[str] = None
+    unit: Optional[str] = None
+    min_quantity: Optional[int] = Field(default=None, ge=0)
+    price: Optional[float] = Field(default=None, ge=0)

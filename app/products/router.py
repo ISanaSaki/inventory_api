@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.products.schemas import ProductCreate, ProductOut, ProductList
+from app.products.schemas import ProductCreate, ProductOut, ProductList,ProductUpdate
 from app.products.service import (
     create_product,
     get_products,
@@ -14,10 +14,11 @@ from app.core.dependencies import (
     require_role,
     pagination_params,
     sorting_params,
-    get_current_user
+
 )
 from app.common.enums import Role
 from app.users.models import User
+from app.auth.service import get_current_user
 
 router = APIRouter(
     prefix="/products",
@@ -57,19 +58,15 @@ def retrieve_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     return prod
 
-@router.put("/{product_id}", response_model=ProductOut)
-def update_prod(
+
+@router.patch("/{product_id}", response_model=ProductOut)
+def patch_product(
     product_id: int,
-    data: ProductCreate,
+    data: ProductUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return update_product(
-        db=db,
-        product_id=product_id,
-        data=data,
-        current_user=current_user
-    )
+    return update_product(db, product_id, data, current_user)
 
 @router.delete("/{product_id}", response_model=ProductOut)
 def delete_prod(
