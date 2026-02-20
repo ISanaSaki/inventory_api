@@ -16,6 +16,7 @@ pydantic[email]
 # Auth & Security
 python-jose
 passlib[argon2]
+slowapi
 
 # Environment variables
 python-dotenv

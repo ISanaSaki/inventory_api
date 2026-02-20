@@ -16,3 +16,6 @@ class User(Base):
     role = Column(Enum(Role), default=Role.USER, nullable=False)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    failed_login_count = Column(Integer, nullable=False, default=0)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
+    last_failed_at = Column(DateTime(timezone=True), nullable=True)

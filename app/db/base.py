@@ -6,4 +6,4 @@ from app.categories.models import Category
 from app.suppliers.models import Supplier
 from app.inventory.models import Inventory
 from app.audit.models import AuditLog  
-
+from app.auth.models import RefreshToken
