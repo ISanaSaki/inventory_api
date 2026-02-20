@@ -1,4 +1,3 @@
-```markdown
 # 📦 Inventory Management System API
 
 A production-ready **Inventory Management System** built with **FastAPI**,  
