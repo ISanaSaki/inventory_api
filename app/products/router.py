@@ -40,6 +40,8 @@ def list_products(
     pagination: dict = Depends(pagination_params),
     sorting: dict = Depends(sorting_params),
     search: str | None = Query(None),
+    category_id: int | None = Query(None),
+    name: str | None = Query(None),
 ):
     return get_products(
         db=db,
@@ -49,6 +51,8 @@ def list_products(
         sort_by=sorting["sort_by"],
         sort_order=sorting["sort_order"],
         search=search,
+        category_id=category_id,
+        name=name,
     )
 
 @router.get("/{product_id}", response_model=ProductOut)

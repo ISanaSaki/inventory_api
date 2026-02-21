@@ -2,11 +2,6 @@ from pydantic import BaseModel, validator,Field
 from typing import Optional,List
 from datetime import datetime
 from app.common.enums import ChangeType
-from enum import Enum
-
-class ChangeType(str, Enum):
-    IN = "IN"
-    OUT = "OUT"
 
 class InventoryCreate(BaseModel):
     product_id: int
@@ -14,7 +9,6 @@ class InventoryCreate(BaseModel):
     quantity: float
     supplier_id: Optional[int] = None
     description: Optional[str] = None
-    user_id: int
     
     @validator('change_type', pre=True)
     def validate_change_type(cls, v):
@@ -28,8 +22,8 @@ class InventoryCreate(BaseModel):
 class InventoryOut(BaseModel):
     id: int
     product_id: int
-    change_type: str
-    quantity: int
+    change_type: ChangeType
+    quantity: float
     user_id: int
     supplier_id: Optional[int] = None
     description: Optional[str] = None

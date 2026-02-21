@@ -37,7 +37,9 @@ def create_inventory_log(
         if data.quantity > previous_stock:
             raise ValueError("Not enough stock")
 
-    log = Inventory(**data.dict())
+    payload = data.dict()  # یا data.model_dump() در pydantic v2
+    payload["user_id"] = current_user.id
+    log = Inventory(**payload)
     db.add(log)
     db.commit()
     db.refresh(log)
@@ -82,14 +84,15 @@ def get_inventory_logs(
     q = db.query(Inventory)
     # change_type: Enum or str
     if change_type:
-        if isinstance(change_type, ChangeType):
-            change_type = change_type.value  # "IN" or "OUT"
+    # اگر از Query به صورت str رسیده باشد
+        if isinstance(change_type, str):
+            try:
+                change_type = ChangeType(change_type)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid change_type")
 
-        if change_type not in ("IN", "OUT"):
-            raise HTTPException(status_code=400, detail="Invalid change_type")
-
+    # حالا change_type قطعاً از نوع ChangeType است
         q = q.filter(Inventory.change_type == change_type)
-
     if product_id:
         q = q.filter(Inventory.product_id == product_id)
 
