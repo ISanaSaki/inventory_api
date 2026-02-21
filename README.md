@@ -1,203 +1,183 @@
-# 📦 Inventory Management System API
+# Inventory Management API (FastAPI + PostgreSQL)
 
-A production-ready **Inventory Management System** built with **FastAPI**,  
-**PostgreSQL**, and **SQLAlchemy**, featuring secure JWT authentication,  
-role-based access control, inventory tracking, reporting, and Docker support.
-
-This project is designed with modular architecture, clean service-layer separation, and strong business rule enforcement suitable for real-world backend systems.
+A production-style **API-first** inventory management system built with **FastAPI**, **PostgreSQL**, and **JWT authentication**.  
+Designed to practice clean architecture, business rules, reporting queries (aggregations), and security hardening.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-- ✨ JWT Authentication (Access & Refresh Tokens)
-- ✨ Role-based access control (Admin / Staff)
-- ✨ Secure password hashing (Argon2)
-- ✨ Product & category management
-- ✨ Supplier management
-- ✨ Inventory stock-in / stock-out operations
-- ✨ Stock validation (prevents negative inventory)
-- ✨ Unique SKU enforcement
-- ✨ Low-stock monitoring
-- ✨ Inventory reports & analytics
-- ✨ Login & security audit logging
-- ✨ PostgreSQL with Alembic migrations
-- ✨ Dockerized deployment
+### ✅ Authentication & Authorization
+- JWT-based auth (**Access Token + Refresh Token**)
+- Password hashing with **Argon2**
+- Role-Based Access Control (RBAC)
+  - **admin**: manage users/products/categories/suppliers + access reports & audits
+  - **staff**: can only register inventory movements (stock IN/OUT)
 
----
+### ✅ Inventory Management (Ledger-Based)
+- Stock is NOT stored directly on products
+- Current stock is computed from the **inventory ledger**:
+  - `current_stock = SUM(IN) - SUM(OUT)`
+- Stock movements:
+  - **Stock IN** (optionally linked to a supplier)
+  - **Stock OUT** (validated against current stock)
 
-## 🛠 Tech Stack
-
-- **Backend:** FastAPI  
-- **Database:** PostgreSQL  
-- **ORM:** SQLAlchemy  
-- **Authentication:** JWT (Access & Refresh Tokens)  
-- **Security:** Argon2 password hashing  
-- **Migrations:** Alembic  
-- **Containerization:** Docker & Docker Compose  
+### ✅ Core Modules
+- Users
+- Categories
+- Products
+- Inventory (IN/OUT + history)
+- Suppliers
+- Reports
+- Audit logs
 
 ---
 
-## 📂 Project Structure
-
-```txt
-
-app/
-├── auth/          # Authentication & token management
-├── users/         # User and role management
-├── products/      # Product management
-├── categories/    # Category management
-├── inventory/     # Stock transactions (in/out)
-├── suppliers/     # Supplier management
-├── reports/       # Reporting & analytics
-├── audit/         # Login & security audit logs
-├── core/          # Configuration & security settings
-├── db/            # Database initialization
-└── main.py        # Application entry point
-
-alembic/           # Database migrations
-Dockerfile
-docker-compose.yml
-requirements.txt
-.env
-
-````
+## 🧠 Business Rules (Validation)
+- Prevent OUT transactions greater than current stock
+- Prevent duplicate SKU
+- Prevent deleting categories that contain products
+- Prevent deleting products that already have inventory transactions
+- Prevent zero/negative quantity in stock movements
 
 ---
 
-## 🔐 Authentication & Roles
+## 🔐 Security Enhancements (Hardened)
+This project includes practical security controls often seen in real systems:
 
-Authentication is handled using **JWT tokens** (Access & Refresh).
+1. **CORS Hardening**
+   - restricted origins/methods/headers
+   - `allow_credentials` disabled (when not required)
 
-### Roles
+2. **Password Policy Enforcement**
+   - minimum length
+   - must include letters + digits
+   - rejects weak passwords patterns
 
-**Admin**
-- Full system access
-- Manage users, products, suppliers
-- View reports and audit logs
+3. **Email Enumeration Prevention**
+   - login/refresh errors are normalized (same response for invalid email/password)
 
-**Staff**
-- Manage products and inventory
-- Perform stock-in / stock-out operations
-- View relevant reports
+4. **Login Auditing**
+   - all login attempts are stored with metadata (IP/User-Agent)
+   - success/failure tracked for monitoring
 
----
+5. **Account Lockout**
+   - temporary lock after repeated failed attempts (mitigates brute force)
 
-## 🔑 API Endpoints Overview
-
-### Auth
-
-- `POST /auth/register` — Register new user  
-- `POST /auth/login` — Login & receive tokens  
-- `POST /auth/refresh` — Refresh access token  
-
-### Products & Categories
-
-- `POST /products/` — Create product  
-- `GET /products/` — List products  
-- `PUT /products/{id}` — Update product  
-- `DELETE /products/{id}` — Delete product  
-- `POST /categories/` — Create category  
-
-### Inventory
-
-- `POST /inventory/stock-in` — Add stock  
-- `POST /inventory/stock-out` — Remove stock  
-- `GET /inventory/logs` — Inventory history  
-
-### Suppliers
-
-- `POST /suppliers/` — Create supplier  
-- `GET /suppliers/` — List suppliers  
-
-### Reports
-
-- `GET /reports/current-stock` — Current inventory  
-- `GET /reports/low-stock` — Low stock items  
-- `GET /reports/consumption` — Consumption report  
+6. **Refresh Token Rotation + Reuse Detection**
+   - refresh tokens are stored **hashed**
+   - each refresh rotates the token
+   - reuse of an old token triggers:
+     - revocation of all active refresh tokens
+     - audit log event
 
 ---
 
-## ⚙️ Environment Variables
+## 🔎 Filtering / Sorting / Pagination
 
-Create a `.env` file in the root directory:
+### Products
+`GET /products`
+- Filtering:
+  - `category_id`
+  - `name` (partial match)
+  - `search` (name search)
+- Sorting:
+  - `sort_by` + `sort_order`
+- Pagination:
+  - `page`, `page_size` (or offset-based where applicable)
 
+### Inventory History
+`GET /inventory/history`
+- Filters:
+  - `change_type` (IN / OUT)
+  - `product_id`
+  - `user_id`
+  - `supplier_id`
+  - `start_date`, `end_date`
+- Sorting:
+  - by `created_at`, `quantity`, etc.
+- Pagination:
+  - `page`, `page_size`
+
+---
+
+## 🧾 Reports
+`/reports/*` endpoints provide SQL aggregation practice such as:
+- Current stock per product (IN/OUT/current_stock)
+- Low-stock items (based on `min_quantity`)
+- Time-range movement report
+- Top inbound / top consumption
+
+---
+
+## 🧱 Tech Stack
+- **FastAPI**
+- **PostgreSQL**
+- **SQLAlchemy**
+- **Alembic**
+- **Pydantic**
+- **Argon2**
+- **JWT (Access + Refresh)**
+
+---
+
+## 🚀 Run Locally
+
+### 1) Create `.env`
+Example:
 ```env
-DATABASE_URL=postgresql://postgres:password@db:5432/inventory_db
-SECRET_KEY=your_secret_key
-ACCESS_TOKEN_SECRET_KEY=your_access_secret
-REFRESH_TOKEN_SECRET_KEY=your_refresh_secret
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/inventory_db
+JWT_SECRET_KEY=CHANGE_ME
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
 ````
 
----
-
-## 🐳 Run with Docker (Recommended)
+### 2) Docker
 
 ```bash
 docker-compose up --build
 ```
 
-API will be available at:
+### 3) API Docs
 
-* [http://localhost:8000](http://localhost:8000)
-* Swagger docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+* Swagger UI: `/docs`
+* ReDoc: `/redoc`
 
 ---
 
-## 🧪 Run Locally (Without Docker)
+## ✅ Quick Test Scenario
 
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+1. Register admin
+2. Create category
+3. Create product (unique SKU)
+4. Stock IN (with supplier)
+5. Stock OUT (must not exceed stock)
+6. Check inventory history + reports
+7. Verify staff cannot create products/categories
+
+---
+
+## 📌 Project Structure
+
+```
+app/
+ ├── core/          # config, db dependencies, security, password policy
+ ├── auth/
+ ├── users/
+ ├── categories/
+ ├── products/
+ ├── inventory/
+ ├── suppliers/
+ ├── reports/
+ ├── audit/
+ └── main.py
 ```
 
 ---
 
-## 🧬 Database Migrations
+## 📄 License
 
-Run migrations locally or inside the container:
+MIT (or your preferred license)
 
-```bash
-alembic upgrade head
 ```
-
----
-
-## 📊 Reporting Capabilities
-
-* Current stock levels
-* Low inventory alerts
-* Stock movement history
-* Consumption trends
-* Supplier-based tracking
-
----
-
-## 🔒 Security Highlights
-
-* Passwords hashed using **Argon2**
-* Access & Refresh token rotation
-* Role-based authorization enforcement
-* Business rule validation at service layer
-* CORS hardening support
-* Login audit tracking
-* Protection against stock underflow
-
----
-
-## 🎯 Project Objective
-
-This project demonstrates the ability to design and implement a secure, modular, and scalable backend system with:
-
-* Clean architecture principles
-* Separation of concerns
-* Robust authentication & authorization
-* Business logic enforcement
-* Database version control
-* Production-ready deployment support
-
-It showcases backend engineering skills in API design, security implementation, relational database modeling, and modular system architecture.
